@@ -1,0 +1,151 @@
+<div class="valuation-container">
+  <!-- Header -->
+  <div class="flex-row-between page-header">
+    <div>
+      <h2 class="glow-text">Asset Growth Ledger</h2>
+      <p class="text-secondary">Manage monthly snapshots of bank balances, market value, and cost basis used to construct the Asset Growth chart.</p>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-secondary" (click)="snapshotCurrentMonth()">Snapshot Current Month</button>
+      <button class="btn btn-primary" (click)="openHistModal()">Add Manual Snapshot</button>
+    </div>
+  </div>
+
+  <!-- Historical Snapshots Panel -->
+  <div class="glass-card">
+    <div class="table-container" *ngIf="displayAssets().length > 0; else noHist">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th rowspan="2">Month</th>
+            <th rowspan="2" class="text-right">Total Balance</th>
+            <th rowspan="2" class="text-right">Total Market Value</th>
+            <th rowspan="2" class="text-right">Total Cost Basis</th>
+            <th colspan="2" class="text-center group-header">Bank Balance</th>
+            <th colspan="2" class="text-center group-header">Market Value</th>
+            <th colspan="2" class="text-center group-header">Cost Basis</th>
+            <th rowspan="2" class="text-right">Exchange Rate</th>
+            <th rowspan="2" class="text-right">Actions</th>
+          </tr>
+          <tr>
+            <th class="text-right sub-header">USD</th>
+            <th class="text-right sub-header">TWD</th>
+            <th class="text-right sub-header">USD</th>
+            <th class="text-right sub-header">TWD</th>
+            <th class="text-right sub-header">USD</th>
+            <th class="text-right sub-header">TWD</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of displayAssets()">
+            <td class="font-mono"><strong>{{ item.month }}</strong></td>
+            <td class="text-right font-mono font-bold">NT$ {{ item.totalBalance | number:'1.2-2' }}</td>
+            <td class="text-right font-mono font-bold">NT$ {{ item.totalMarketValue | number:'1.2-2' }}</td>
+            <td class="text-right font-mono font-bold">NT$ {{ item.totalCostBasis | number:'1.2-2' }}</td>
+            <td class="text-right font-mono">$ {{ item.bank_usd | number:'1.2-2' }}</td>
+            <td class="text-right font-mono">NT$ {{ item.bank_twd | number:'1.2-2' }}</td>
+            <td class="text-right font-mono">$ {{ item.market_value_usd | number:'1.2-2' }}</td>
+            <td class="text-right font-mono">NT$ {{ item.market_value_twd | number:'1.2-2' }}</td>
+            <td class="text-right font-mono">$ {{ item.cost_basis_usd | number:'1.2-2' }}</td>
+            <td class="text-right font-mono">NT$ {{ item.cost_basis_twd | number:'1.2-2' }}</td>
+            <td class="text-right font-mono">{{ item.usd_twd_rate | number:'1.2-4' }}</td>
+            <td class="text-right actions-cell">
+              <button class="icon-btn edit-btn" (click)="openHistModal(item)" title="Edit Snapshot">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              </button>
+              <button class="icon-btn delete-btn" (click)="deleteHistoricalAsset(item.month)" title="Delete Snapshot">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #noHist>
+      <div class="empty-state">No historical asset snapshots exist. Click Snapshot Current Month to aggregate and save today's balances.</div>
+    </ng-template>
+  </div>
+
+  <!-- Historical Asset Modal -->
+  <div class="modal-overlay" *ngIf="isHistModalOpen" (click)="closeHistModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h4>{{ histFormTitle }}</h4>
+      </div>
+      <div class="modal-body">
+        <form (ngSubmit)="saveHistoricalAsset()">
+          <div class="form-group-row">
+            <div class="form-group">
+              <label class="form-label">Month (YYYY-MM)</label>
+              <input type="text" class="form-control" name="histMonth" [(ngModel)]="histForm.month" placeholder="e.g. 2026-06" [readonly]="histFormTitle.includes('Edit')" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Exchange Rate (USD → TWD)</label>
+              <input type="number" step="0.0001" class="form-control" name="histUsdTwd" [(ngModel)]="histForm.usd_twd_rate" required />
+            </div>
+          </div>
+          <div class="form-group-row">
+            <div class="form-group">
+              <label class="form-label">Bank Balance (USD $)</label>
+              <input type="number" step="0.01" class="form-control" name="histBankUsd" [(ngModel)]="histForm.bank_usd" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Bank Balance (TWD NT$)</label>
+              <input type="number" step="0.01" class="form-control" name="histBankTwd" [(ngModel)]="histForm.bank_twd" required />
+            </div>
+          </div>
+          <div class="form-group-row">
+            <div class="form-group">
+              <label class="form-label">Market Value (USD $)</label>
+              <input type="number" step="0.01" class="form-control" name="histMarketValueUsd" [(ngModel)]="histForm.market_value_usd" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Market Value (TWD NT$)</label>
+              <input type="number" step="0.01" class="form-control" name="histMarketValueTwd" [(ngModel)]="histForm.market_value_twd" required />
+            </div>
+          </div>
+          <div class="form-group-row">
+            <div class="form-group">
+              <label class="form-label">Cost Basis (USD $)</label>
+              <input type="number" step="0.01" class="form-control" name="histCostBasisUsd" [(ngModel)]="histForm.cost_basis_usd" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Cost Basis (TWD NT$)</label>
+              <input type="number" step="0.01" class="form-control" name="histCostBasisTwd" [(ngModel)]="histForm.cost_basis_twd" required />
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeHistModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="saveHistoricalAsset()">Save Snapshot</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.valuation-container {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.btn-group {
+  display: flex;
+  gap: 12px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.group-header {
+  border-bottom: 1px solid rgba(69, 71, 90, 0.3);
+}
+
+.sub-header {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+</style>

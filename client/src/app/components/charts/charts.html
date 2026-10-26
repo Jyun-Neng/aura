@@ -1,0 +1,154 @@
+<div class="charts-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h2 class="glow-text">Financial Analytics</h2>
+    <p class="text-secondary">Explore trends in net worth, cash flow, passive income, and portfolio performance.</p>
+  </div>
+
+  <!-- Asset Growth (Full Width) -->
+  <div class="glass-card chart-card full-width-card">
+    <div class="chart-header flex-row-between">
+      <div>
+        <h3>Asset Growth Trend</h3>
+        <p class="chart-subtitle">Each month, in TWD (converted using that month's logged exchange rate from the Asset Growth Ledger). Shown one series at a time since Total Bank Balance is on a much smaller scale than the others.</p>
+      </div>
+      <div class="currency-indicator font-mono">
+        Currency: <strong>TWD</strong>
+      </div>
+    </div>
+    <div class="series-tabs">
+      <button
+        type="button"
+        class="series-tab-btn"
+        *ngFor="let opt of assetGrowthSeriesOptions"
+        [class.active]="assetGrowthSeries() === opt.value"
+        (click)="setAssetGrowthSeries(opt.value)">
+        {{ opt.label }}
+      </button>
+    </div>
+    <div class="chart-canvas-container">
+      <canvas #assetGrowthCanvas></canvas>
+    </div>
+  </div>
+
+  <!-- Bottom Grid -->
+  <div class="charts-grid">
+    <!-- Cash Flow Timeline -->
+    <div class="glass-card chart-card">
+      <div class="chart-header">
+        <h3>Cash Flow Timeline</h3>
+        <p class="chart-subtitle">Monthly income (salary, interest, distributions) against expenses across all categories.</p>
+      </div>
+      <div class="chart-canvas-container">
+        <canvas #cashFlowCanvas></canvas>
+      </div>
+    </div>
+
+    <!-- Passive Income -->
+    <div class="glass-card chart-card">
+      <div class="chart-header">
+        <h3>Passive Income Trend</h3>
+        <p class="chart-subtitle">Combined monthly bank interest and investment distributions.</p>
+      </div>
+      <div class="chart-canvas-container">
+        <canvas #passiveIncomeCanvas></canvas>
+      </div>
+    </div>
+
+    <!-- Unrealized Gain/Loss -->
+    <div class="glass-card chart-card">
+      <div class="chart-header">
+        <h3>Unrealized Gain/Loss</h3>
+        <p class="chart-subtitle">Total market value minus total cost basis each month — how much your portfolio is up or down.</p>
+      </div>
+      <div class="chart-canvas-container">
+        <canvas #gainLossCanvas></canvas>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+.charts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.chart-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.chart-header {
+  border-bottom: 1px solid rgba(69, 71, 90, 0.2);
+  padding-bottom: 14px;
+}
+
+.chart-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.chart-canvas-container {
+  position: relative;
+  height: 380px;
+  width: 100%;
+}
+
+.full-width-card .chart-canvas-container {
+  height: 420px;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.currency-indicator {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background-color: rgba(17, 17, 27, 0.4);
+  border: 1px solid var(--border-color);
+  font-size: 0.85rem;
+}
+
+.series-tabs {
+  display: flex;
+  gap: 4px;
+  background-color: var(--ctp-surface0);
+  border-radius: 8px;
+  padding: 3px;
+  border: 1px solid var(--border-color);
+  width: fit-content;
+}
+
+.series-tab-btn {
+  background: none;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ctp-subtext0);
+  transition: all 0.2s ease;
+}
+
+.series-tab-btn.active {
+  background-color: var(--ctp-surface1);
+  color: var(--ctp-text);
+  box-shadow: var(--shadow-sm);
+}
+</style>

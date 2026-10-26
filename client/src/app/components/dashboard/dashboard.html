@@ -1,0 +1,675 @@
+<div class="dashboard-container">
+  <!-- Live FX Rate Strip -->
+  <div class="fx-strip">
+    <div class="fx-strip-left">
+      <span class="fx-pulse"></span>
+      <span class="fx-label">Live Exchange Rate</span>
+    </div>
+    <span class="fx-value">1 USD = NT$ {{ usdTwdRate() | number: '1.2-4' }}</span>
+  </div>
+
+  <!-- Summary Cards Grid -->
+  <div class="metrics-grid">
+    <!-- Net Worth Card -->
+    <div class="glass-card net-worth-card">
+      <div class="card-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-info"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      </div>
+      <div class="card-content">
+        <span class="card-label">Total Net Worth</span>
+        <h1 class="card-value glow-text">NT$ {{ netWorth() | number: '1.2-2' }}</h1>
+        <p class="card-subtitle">Aggregated cash & investments</p>
+      </div>
+    </div>
+
+    <!-- Bank Deposits Card -->
+    <div class="glass-card deposit-card">
+      <div class="card-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-success"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      </div>
+      <div class="card-content">
+        <span class="card-label">Bank Deposits</span>
+        <h2 class="card-value">NT$ {{ totalBank() | number: '1.2-2' }}</h2>
+        <div class="breakdown">
+          <span class="breakdown-item"
+           ><span class="bullet usd"></span>USD: ${{ totalBankUsd() | number: '1.0-0' }}</span
+          >
+          <span class="breakdown-item"
+           ><span class="bullet twd"></span>TWD: NT${{ totalBankTwd() | number: '1.0-0' }}</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Securities Portfolio Card -->
+    <div class="glass-card stock-card">
+      <div class="card-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-warning"><line x1="6" y1="20" x2="6" y2="16"/><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/></svg>
+      </div>
+      <div class="card-content">
+        <span class="card-label">Securities Portfolio</span>
+        <h2 class="card-value">NT$ {{ totalStock() | number: '1.2-2' }}</h2>
+        <div class="breakdown">
+          <span class="breakdown-item"
+           ><span class="bullet usd"></span>USD: ${{ totalStockUsd() | number: '1.0-0' }}</span
+          >
+          <span class="breakdown-item"
+           ><span class="bullet twd"></span>TWD: NT${{ totalStockTwd() | number: '1.0-0' }}</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Passive Income YTD Card -->
+    <div class="glass-card passive-income-card">
+      <div class="card-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-info"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      </div>
+      <div class="card-content">
+        <span class="card-label">Passive Income (YTD)</span>
+        <h2 class="card-value">NT$ {{ passiveIncomeYtd() | number: '1.2-2' }}</h2>
+        <p class="card-subtitle">Interest & investment distributions this year</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Asset Allocation -->
+  <div class="glass-card pane-card">
+    <div class="pane-header">
+      <h3>Asset Allocation</h3>
+    </div>
+
+    <div class="breakdown-tabs">
+      <button
+        type="button"
+        class="breakdown-tab-btn"
+        [class.active]="allocationMetric() === 'cost_basis'"
+        (click)="setAllocationMetric('cost_basis')"
+      >
+        Cost Basis
+      </button>
+      <button
+        type="button"
+        class="breakdown-tab-btn"
+        [class.active]="allocationMetric() === 'marketValue'"
+        (click)="setAllocationMetric('marketValue')"
+      >
+        Market Value
+      </button>
+    </div>
+
+    <div class="allocation-charts-grid">
+      <div class="allocation-subchart">
+        <h4 class="allocation-subchart-title">Balance vs. Investment</h4>
+        <div class="pie-with-list">
+          <div class="allocation-chart-container">
+            <canvas #balanceCanvas></canvas>
+          </div>
+          <div class="pie-legend-list">
+            <div class="pie-legend-row" *ngFor="let slice of balanceSlices()">
+              <span class="pie-legend-swatch" [style.background-color]="slice.color"></span>
+              <span class="pie-legend-label">{{ slice.label }}</span>
+              <span class="pie-legend-pct">{{ slice.pct | number: '1.1-1' }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="allocation-subchart">
+        <h4 class="allocation-subchart-title">USD vs. TWD Investment</h4>
+        <div class="pie-with-list">
+          <div class="allocation-chart-container">
+            <canvas #currencyCanvas></canvas>
+          </div>
+          <div class="pie-legend-list">
+            <div class="pie-legend-row" *ngFor="let slice of currencySlices()">
+              <span class="pie-legend-swatch" [style.background-color]="slice.color"></span>
+              <span class="pie-legend-label">{{ slice.label }}</span>
+              <span class="pie-legend-pct">{{ slice.pct | number: '1.1-1' }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="allocation-subchart">
+        <h4 class="allocation-subchart-title">USD Investment Breakdown</h4>
+        <div class="pie-with-list">
+          <div class="allocation-chart-container">
+            <canvas #usdHoldingsCanvas></canvas>
+          </div>
+          <div class="pie-legend-list">
+            <div class="pie-legend-row" *ngFor="let slice of usdHoldingsSlices()">
+              <span class="pie-legend-swatch" [style.background-color]="slice.color"></span>
+              <span class="pie-legend-label">{{ slice.label }}</span>
+              <span class="pie-legend-pct">{{ slice.pct | number: '1.1-1' }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="allocation-subchart">
+        <h4 class="allocation-subchart-title">TWD Investment Breakdown</h4>
+        <div class="pie-with-list">
+          <div class="allocation-chart-container">
+            <canvas #twdHoldingsCanvas></canvas>
+          </div>
+          <div class="pie-legend-list">
+            <div class="pie-legend-row" *ngFor="let slice of twdHoldingsSlices()">
+              <span class="pie-legend-swatch" [style.background-color]="slice.color"></span>
+              <span class="pie-legend-label">{{ slice.label }}</span>
+              <span class="pie-legend-pct">{{ slice.pct | number: '1.1-1' }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Split Area -->
+  <div class="split-grid">
+    <!-- Left Pane: Holdings Summary -->
+    <div class="glass-card pane-card">
+      <div class="pane-header flex-row-between">
+        <h3>Investment Holdings</h3>
+        <button class="btn btn-secondary btn-sm" routerLink="/portfolio">Manage Securities</button>
+      </div>
+
+      <div class="currency-tabs">
+        <button
+          type="button"
+          class="currency-tab-btn"
+          [class.active]="investmentTab() === 'USD'"
+          (click)="setInvestmentTab('USD')"
+        >
+          USD
+        </button>
+        <button
+          type="button"
+          class="currency-tab-btn"
+          [class.active]="investmentTab() === 'TWD'"
+          (click)="setInvestmentTab('TWD')"
+        >
+          TWD
+        </button>
+      </div>
+
+      <div class="table-container" *ngIf="tabInvestments().length > 0; else noInvestments">
+        <table class="custom-table holdings-table">
+          <thead>
+            <tr>
+              <th class="col-ticker">Ticker</th>
+              <th class="col-name">Name</th>
+              <th class="col-shares">Shares</th>
+              <th class="text-right col-price">Price</th>
+              <th class="text-right col-value">Market Value</th>
+              <th class="text-right col-gain">Gain / Loss</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of tabInvestments()">
+              <td>
+                <span
+                  class="ticker-badge"
+                  [class.badge-us]="item.currency === 'USD'"
+                  [class.badge-tw]="item.currency === 'TWD'"
+                >
+                  {{ item.ticker }}
+                </span>
+              </td>
+              <td>{{ item.name }}</td>
+              <td>{{ item.shares | number: '1.1-4' }}</td>
+              <td class="text-right">
+                {{ item.currency | currencySymbol }}{{ item.currentPrice | number: '1.2-2' }}
+              </td>
+              <td class="text-right">
+                {{ item.currency | currencySymbol }}{{ item.marketValue | number: '1.2-2' }}
+              </td>
+              <td
+                class="text-right"
+                [class.text-success]="item.profit >= 0"
+                [class.text-danger]="item.profit < 0"
+              >
+                {{ item.profit >= 0 ? '+' : '' }}{{ item.profit | number: '1.2-2' }}
+                <span class="profit-pct">({{ item.profitPct | number: '1.1-1' }}%)</span>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="totals-row">
+              <td colspan="4">Total</td>
+              <td class="text-right">
+                {{ investmentTab() | currencySymbol
+                }}{{ tabTotals().marketValue | number: '1.2-2' }}
+              </td>
+              <td
+                class="text-right"
+                [class.text-success]="tabTotals().profit >= 0"
+                [class.text-danger]="tabTotals().profit < 0"
+              >
+                {{ tabTotals().profit >= 0 ? '+' : '' }}{{ tabTotals().profit | number: '1.2-2' }}
+                <span class="profit-pct">({{ tabTotals().profitPct | number: '1.1-1' }}%)</span>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <ng-template #noInvestments>
+        <div class="empty-state">
+          <p>
+            No {{ investmentTab() }} investments logged. Go to the Securities Ledger to add your
+            stocks, ETFs, or funds.
+          </p>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Right Pane: Recent Transactions -->
+    <div class="glass-card pane-card">
+      <div class="pane-header flex-row-between">
+        <h3>Recent Transactions</h3>
+        <button class="btn btn-secondary btn-sm" routerLink="/cashflow">Manage Transactions</button>
+      </div>
+
+      <div class="recent-flows-list" *ngIf="recentFlows().length > 0; else noCashFlow">
+        <div class="flow-item flex-row-between" *ngFor="let item of recentFlows()">
+          <div class="flow-info">
+            <span class="flow-desc">{{ item.description }}</span>
+            <span class="flow-meta">
+              {{ item.date }} •
+              <span class="badge-cat">{{ item.category }}</span>
+            </span>
+          </div>
+          <div
+            class="flow-amount"
+            [class.text-success]="item.type === 'inflow'"
+            [class.text-danger]="item.type === 'outflow'"
+          >
+            {{ item.type === 'inflow' ? '+' : '-' }}{{ item.currency | currencySymbol
+            }}{{ item.amount | number: '1.2-2' }}
+          </div>
+        </div>
+      </div>
+      <ng-template #noCashFlow>
+        <div class="empty-state">
+          <p>No transactions registered yet. Click Manage Transactions to add one.</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>
+
+<style>
+  .dashboard-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .fx-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-radius: 10px;
+    background-color: rgba(17, 17, 27, 0.35);
+    border: 1px solid rgba(69, 71, 90, 0.25);
+    font-size: 0.85rem;
+  }
+
+  .fx-strip-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+  }
+
+  .fx-label {
+    letter-spacing: 0.02em;
+  }
+
+  .fx-value {
+    font-weight: 700;
+    color: var(--ctp-text);
+    font-family: SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+  }
+
+  .fx-pulse {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: var(--ctp-green);
+    box-shadow: 0 0 6px var(--ctp-green);
+    animation: fx-pulse 2s infinite;
+  }
+
+  @keyframes fx-pulse {
+    0% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(166, 227, 161, 0.7);
+    }
+    70% {
+      transform: scale(1);
+      box-shadow: 0 0 0 6px rgba(166, 227, 161, 0);
+    }
+    100% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(166, 227, 161, 0);
+    }
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .net-worth-card {
+    background: linear-gradient(
+      135deg,
+      rgba(203, 166, 247, 0.15) 0%,
+      rgba(30, 30, 46, 0.6) 100%
+    ) !important;
+    border: 1px solid rgba(203, 166, 247, 0.25) !important;
+  }
+
+  .card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background-color: rgba(17, 17, 27, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+
+  .card-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .card-value {
+    margin-top: 6px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .card-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .breakdown {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+
+  .breakdown-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .bullet {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .bullet.usd {
+    background-color: var(--ctp-blue);
+  }
+  .bullet.twd {
+    background-color: var(--ctp-yellow);
+  }
+
+  .breakdown-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    background-color: var(--ctp-surface0);
+    border-radius: 8px;
+    padding: 3px;
+    border: 1px solid var(--border-color);
+    width: fit-content;
+  }
+
+  .breakdown-tab-btn {
+    background: none;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ctp-subtext0);
+    transition: all 0.2s ease;
+  }
+
+  .breakdown-tab-btn.active {
+    background-color: var(--ctp-surface1);
+    color: var(--ctp-text);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Fixed column widths so the table doesn't reflow when switching currency
+   tabs (tickers/prices differ in length between USD and TWD holdings). */
+  .holdings-table {
+    table-layout: fixed;
+  }
+
+  .holdings-table .col-ticker {
+    width: 14%;
+  }
+
+  .holdings-table .col-name {
+    width: 26%;
+  }
+
+  .holdings-table .col-shares {
+    width: 14%;
+  }
+
+  .holdings-table .col-price {
+    width: 16%;
+  }
+
+  .holdings-table .col-value {
+    width: 15%;
+  }
+
+  .holdings-table .col-gain {
+    width: 15%;
+  }
+
+  .split-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+  }
+
+  /* Grid items default to min-width: auto, which pins each track to its
+     content's min-content size and can override the fr ratio above (e.g.
+     the holdings table's fixed columns). min-width: 0 lets both sides
+     actually shrink to the ratio; overflow is handled by each card's own
+     internal scrolling (table, recent-flows list). */
+  .split-grid > * {
+    min-width: 0;
+  }
+
+  @media (max-width: 1024px) {
+    .split-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .pane-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .allocation-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .allocation-charts-grid > * {
+    min-width: 0;
+  }
+
+  @media (max-width: 1100px) {
+    .allocation-charts-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .allocation-charts-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .allocation-subchart {
+    background-color: rgba(17, 17, 27, 0.3);
+    border: 1px solid rgba(69, 71, 90, 0.25);
+    border-radius: 10px;
+    padding: 10px;
+  }
+
+  .allocation-subchart-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  /* Pie above list (not side-by-side) — with 4 charts sharing one row,
+     each column is too narrow to fit a full-size pie and a wide list next
+     to each other, so stacking lets the list use the full column width. */
+  .pie-with-list {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .allocation-chart-container {
+    position: relative;
+    height: 130px;
+    width: 130px;
+    flex-shrink: 0;
+  }
+
+  /* Grid (not flex) so the percentage column stays aligned across rows
+     regardless of how many lines a full, untruncated name wraps to. Each
+     row is `display: contents`, so its 3 children (swatch/label/pct) become
+     direct grid items placed into these 3 columns. */
+  .pie-legend-list {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    column-gap: 6px;
+    row-gap: 4px;
+    align-items: baseline;
+    width: 100%;
+    min-width: 0;
+    max-height: 130px;
+    overflow-y: auto;
+    padding-right: 4px;
+    font-size: 0.85rem;
+  }
+
+  .pie-legend-row {
+    display: contents;
+  }
+
+  .pie-legend-swatch {
+    width: 10px;
+    height: 10px;
+    min-width: 10px;
+    border-radius: 3px;
+    align-self: center;
+  }
+
+  .pie-legend-label {
+    min-width: 0;
+    color: var(--text-primary);
+    overflow-wrap: break-word;
+  }
+
+  .pie-legend-pct {
+    font-weight: 700;
+    color: var(--text-secondary);
+    font-family: SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    text-align: right;
+  }
+
+  .recent-flows-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .flow-item {
+    padding: 12px;
+    border-radius: 10px;
+    background-color: rgba(17, 17, 27, 0.3);
+    border: 1px solid rgba(69, 71, 90, 0.2);
+    transition: background-color 0.2s ease;
+  }
+
+  .flow-item:hover {
+    background-color: rgba(49, 50, 68, 0.4);
+  }
+
+  .flow-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .flow-desc {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .flow-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .badge-cat {
+    color: var(--ctp-mauve);
+  }
+
+  .flow-amount {
+    font-weight: 700;
+    font-size: 1.05rem;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  .profit-pct {
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .totals-row td {
+    font-weight: 700;
+    border-top: 2px solid rgba(69, 71, 90, 0.5);
+    background-color: rgba(17, 17, 27, 0.3);
+  }
+</style>

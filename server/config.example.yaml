@@ -1,0 +1,8 @@
+# AURA server config. Copy this file to config.yaml (gitignored) and edit
+# that copy; the server uses this example only when config.yaml is missing.
+
+# Where the SQLite database lives. A relative path resolves from this folder
+# (server/); ~/ is your home folder. The server refuses to start if the file
+# is missing, except for the sample below: example/sample.db is created on
+# first use as a copy of the committed example/aura-example.db.
+database: example/sample.db

@@ -1,0 +1,232 @@
+<div class="portfolio-container">
+  <!-- Header -->
+  <div class="flex-row-between page-header">
+    <div>
+      <h2 class="glow-text">Securities Ledger</h2>
+      <p class="text-secondary">Manage your stock, ETF, and fund investment holdings.</p>
+    </div>
+    <button class="btn btn-primary" (click)="openInvModal()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Securities
+    </button>
+  </div>
+
+  <!-- Investment Table -->
+  <div class="glass-card">
+    <div class="currency-tabs">
+      <button
+        type="button"
+        class="currency-tab-btn"
+        [class.active]="investmentTab() === 'USD'"
+        (click)="setInvestmentTab('USD')"
+      >
+        USD
+      </button>
+      <button
+        type="button"
+        class="currency-tab-btn"
+        [class.active]="investmentTab() === 'TWD'"
+        (click)="setInvestmentTab('TWD')"
+      >
+        TWD
+      </button>
+    </div>
+
+    <div class="table-container" *ngIf="tabInvestments().length > 0; else noInvestments">
+      <table class="custom-table holdings-table">
+        <thead>
+          <tr>
+            <th class="col-ticker">Ticker</th>
+            <th class="col-name">Asset Name</th>
+            <th class="col-type">Type</th>
+            <th class="text-right col-shares">Shares/Units</th>
+            <th class="text-right col-cost">Total Cost Basis</th>
+            <th class="text-right col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let inv of tabInvestments()">
+            <td>
+              <span
+                class="ticker-badge"
+                [class.badge-us]="inv.currency === 'USD'"
+                [class.badge-tw]="inv.currency === 'TWD'"
+              >
+                {{ inv.ticker }}
+              </span>
+            </td>
+            <td>
+              <strong>{{ inv.name }}</strong>
+            </td>
+            <td>
+              <span class="type-text">{{ inv.type | uppercase }}</span>
+            </td>
+            <td class="text-right font-mono">{{ inv.shares | number: '1.1-4' }}</td>
+            <td class="text-right font-mono">
+              {{ inv.currency | currencySymbol }} {{ inv.cost_basis | number: '1.2-2' }}
+            </td>
+            <td class="text-right actions-cell">
+              <button class="icon-btn edit-btn" (click)="openInvModal(inv)" title="Edit Investment">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              </button>
+              <button
+                class="icon-btn delete-btn"
+                (click)="deleteInvestment(inv.id!)"
+                title="Delete Investment"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #noInvestments>
+      <div class="empty-state">
+        No {{ investmentTab() }} holdings logged. Click Add Securities to register your assets.
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Investment Modal -->
+  <div class="modal-overlay" *ngIf="isInvModalOpen" (click)="closeInvModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h4>{{ invFormTitle }}</h4>
+      </div>
+      <div class="modal-body">
+        <form (ngSubmit)="saveInvestment()">
+          <div class="form-group-row">
+            <div class="form-group">
+              <label class="form-label">Ticker Symbol</label>
+              <input
+                type="text"
+                class="form-control"
+                name="invTicker"
+                [(ngModel)]="invForm.ticker"
+                placeholder="e.g. AAPL, 0050"
+                required
+             />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Asset Name</label>
+              <input
+                type="text"
+                class="form-control"
+                name="invName"
+                [(ngModel)]="invForm.name"
+                placeholder="e.g. Apple Inc."
+                required
+             />
+            </div>
+          </div>
+          <div class="form-group-row">
+            <div class="form-group">
+              <label class="form-label">Asset Type</label>
+              <select class="form-control" name="invType" [(ngModel)]="invForm.type">
+                <option value="stock">Stock</option>
+                <option value="etf">ETF</option>
+                <option value="fund">Fund</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Currency</label>
+              <select class="form-control" name="invCurrency" [(ngModel)]="invForm.currency">
+                <option value="USD">USD ($)</option>
+                <option value="TWD">TWD (NT$)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group-row">
+            <div class="form-group">
+              <label class="form-label">Shares / Units Owned</label>
+              <input
+                type="number"
+                step="0.0001"
+                class="form-control"
+                name="invShares"
+                [(ngModel)]="invForm.shares"
+                required
+             />
+            </div>
+            <div class="form-group">
+              <label class="form-label"
+                >Total Cost Basis ({{ invForm.currency === 'USD' ? 'USD $' : 'TWD NT$' }})</label
+              >
+              <input
+                type="number"
+                step="0.01"
+                class="form-control"
+                name="invCostBasis"
+                [(ngModel)]="invForm.cost_basis"
+                required
+             />
+            </div>
+          </div>
+          <p class="form-hint">
+            TWD-denominated tickers on the TW market (e.g. 0050) automatically get a ".TW" suffix
+            when fetching live prices.
+          </p>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeInvModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="saveInvestment()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .portfolio-container {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .form-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: -4px;
+  }
+
+  .currency-tabs {
+    margin-bottom: 16px;
+  }
+
+  /* Fixed column widths so the table doesn't reflow when switching currency
+   tabs (tickers/cost basis differ in length between USD and TWD holdings). */
+  .holdings-table {
+    table-layout: fixed;
+  }
+
+  .holdings-table .col-ticker {
+    width: 14%;
+  }
+
+  .holdings-table .col-name {
+    width: 28%;
+  }
+
+  .holdings-table .col-type {
+    width: 14%;
+  }
+
+  .holdings-table .col-shares {
+    width: 16%;
+  }
+
+  .holdings-table .col-cost {
+    width: 16%;
+  }
+
+  .holdings-table .col-actions {
+    width: 12%;
+  }
+
+  .type-text {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ctp-lavender);
+  }
+</style>

@@ -1,0 +1,8 @@
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+!server/example/aura-example.db
+.DS_Store
+server/config.yaml
+.claude/settings.local.json
